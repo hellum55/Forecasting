@@ -1,4 +1,5 @@
 #The packages we will use frequently need to be called before using functions
+#BLABLABALBALA
 library(forecast)
 library(stats)
 library(datasets)
