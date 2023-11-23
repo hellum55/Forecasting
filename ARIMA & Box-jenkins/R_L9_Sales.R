@@ -3,7 +3,7 @@ library(readxl)
 ################################################################################
 ##### Sales data seasonal ######
 ################################################################################
-data<- read_excel("C:/Users/au672494/OneDrive - Aarhus Universitet/Teaching/Courses/Business Forecasting/Business Forecasting 2023/Week 45/Sales data.xlsx")
+data<- read_excel("~/Business Forecasting/ARIMA & Box-jenkins/Sales data.xlsx")
 y<-ts(data$Sales,start = 1)
 
 T<-floor(0.85*length(y))# counts number of time period available in the data 
