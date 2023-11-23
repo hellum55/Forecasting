@@ -47,6 +47,7 @@ tsdisplay(residuals(fit0), main='Model Residuals')
 fcast1 <- forecast(fit0, h=length(outsamp))
 #plot the forecast together with confidence intervals
 plot(fcast1)
+lines(ts(y[77:96], start = 1, frequency = 12))
 
 #plot data together with the original pseudo out-of-sample
 f1<-ts(fcast1$mean, end=length(y), frequency = 12)
