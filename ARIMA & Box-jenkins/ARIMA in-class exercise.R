@@ -3,16 +3,19 @@ library(readxl)
 
 # Q1:####
 data<- read_excel("~/Business Forecasting/ARIMA & Box-jenkins/ARSales.xlsx")
-y <-ts(data$Sales,end = c(2006, 12), frequency=12)
+y <-ts(data$Sales,start = 1, frequency=12)
 
 plot(y)
-
+#The plot is multiplicative because the variance is increasing. Make a linear reg to see it
 # Q2:####
 decompSalesAdd <- decompose(y, type = "additive") #for multiplicative decomposition
 plot(decompSalesAdd)
 
 decompSalesMult <- decompose(y, type = "multiplicative") #for multiplicative decomposition
 plot(decompSalesMult)
+#A clear upward trend. Clear seasonal spikes. Random is the unexplained part. Also the residual. 
+#Quite constant so the decomp captures the most of the explonation. Constant noise.
+
 #create separate variables for each of the estimated components
 Tr<-decompSalesMult$trend
 S<-decompSalesMult$seasonal
@@ -21,6 +24,10 @@ I<-decompSalesMult$random # These are really the residuals!
 # Q3:####
 acf(y)
 pacf(y)
+#A strong autocorrelation (ACF). Seasonality in the acf between each year. 
+#Lag 13 is way out of the conf. levels. It seems odd that lag 13 is way out. 
+#Its a quick and a fast die out, but no clear model to pick.
+#
 
 # Q4:####
 T<-length(y[1:76])
@@ -48,5 +55,7 @@ lines(outsamp)
 #Testing the accuracy insamp/outsamp
 accuracy(fcast1$mean, outsamp)
 View(data.frame(fcast1$mean,outsamp)) 
+
+#With trend and seasonality is would fit nicely with Holters:
 
 

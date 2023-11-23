@@ -63,8 +63,10 @@ View(data.frame(fcast1$mean,outsamp))
 
 #Can repeat the same for the arima with fixed parameters choice
 fcast2 <- forecast(fit2, h=length(outsamp))
-
 accuracy(fcast2$mean, outsamp)
+
+#Q7 ####
+
 
 
 
