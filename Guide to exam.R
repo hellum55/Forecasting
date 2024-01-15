@@ -421,28 +421,14 @@ summary(fit2)
 #the next period. But the a less significant impact on 
 #It is better than just a regular LM.
 acf(resid(fit2))
-#Checking for serial correlation in the errors
-ARIMA <- auto.arima(x)
-ARIMA
-fcast <- forecast(ARIMA, h=3)
-fcast1 <- fcast$mean
 
-dfcast <- diff(fcast1)
-
-#Lets try to forecast:
-d1 <- fit2$coefficients[1]+fit2$coefficients[2]*dfcast
-forecast2 <- y[526]+cumsum(d1)
-plot(forecast2)
-plot(y, col="red")
-lines(ts(forecast2, start = c(44,11), frequency = 12))
-#Question 5: ####
 # # # # # VAR: Estimation # # # # #
-z <- ts(cbind(y,x,z), frequency = 12)
+z <- ts(cbind(y,x), frequency = freq)
 # Taking the first difference to make the series stationary for VAR analysis.
 dz<- diff(z)
 #determine the order of VAR
 VARselect(dz, lag.max = 12, type="const")[["selection"]] #optimal p =1
-var1 <- VAR(dz, p=2, type="const") #estimate VAR(1)
+var1 <- VAR(dz, p=1, type="const") #estimate VAR(1)
 summary(var1)
 
 #Can do model diagnostics as in AR models

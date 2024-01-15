@@ -7,7 +7,7 @@ library(forecast)
 library(tseries)
 ##########################
 #######NordPoolCase#######
-data <- read_excel("~/Business Forecasting/Old exams/Data/NordPoolCase (1).xlsx")
+data <- read_excel("C:/Users/yanad/OneDrive - Aarhus Universitet/Teaching/Courses/Business Forecasting/Business Forecasting 2023/Week 49-50/NordPoolCase.xlsx")
 View(data)
 
 
@@ -42,9 +42,20 @@ library(Hmisc)
 lm2<-lm(dy~Lag(X,-1)) #predictive regression would be more useful for forecasting
 summary(lm2)
 
-#or consider each of the variables separately (remember they are non-stationary)
+#or consider each of the variables separately
 lm3 <-lm(dy ~diff(buy)+diff(sell))
 summary(lm3)
+
+#Phillips-Ouliaris test (2-step Engle-Granger test)
+## null hypothesis: no cointegration
+z <- ts(cbind(buy,sell,y))
+po.test(z)
+
+lm4 <-lm(y ~buy+sell)
+summary(lm4)  
+
+lm5 <-lm(y ~Lag(buy,-1)+Lag(sell,-1))
+summary(lm5) 
 
 
 #Construct a model for predicting system price
@@ -57,7 +68,7 @@ f1<-auto.arima(insamp)
 summary(f1)
 tsdisplay(residuals(f1))
 
-fcast1<-forecast.Arima(f1, h = length(outsamp))
+fcast1<-forecast(f1, h = length(outsamp))
 plot(fcast1)
 lines(ts(y, frequency = 7))
 accuracy(ts(fcast1,frequency=7), outsamp)
@@ -89,7 +100,6 @@ fcast2 <- forecast(fit2, h=length(outsamp))
 plot(fcast2)
 lines(ts(y, frequency = 7))
 accuracy(fcast2, outsamp)
-
 
 
 #Comparing the 3 different forecasting methods
@@ -152,8 +162,36 @@ serial.test(var1, lags.pt=14, type="PT.asymptotic")
 #Obtaining impulse response functions
 plot(irf(var1,boot = TRUE, ci=0.95))
 
+# # Forecasting with VAR # # 
+#split the sample into training and test
+insampdz <- ts(z[1:274,], frequency = 7)
+outsampdz <- z[275:304,]
+l_o<-length(outsampdz[,1])
 
+#select the order of VAR
+VARselect(insampdz, lag.max = 20, type="const")[["selection"]]
 
+#Fit the model on training data
+fit <- VAR(insampdz, p=8, type="const")
+summary(fit)
+#check the residuals of the model
+serial.test(fit, lags.pt=25, type="PT.asymptotic")
 
+#Obtain the forecast for the test period
+fcast <- forecast(fit, h=l_o)
+plot(fcast) #provides a plot of the forecasts
+#calculate the accuracy of the forecast for the ltn variable
+accuracy(fcast$forecast$dy, outsampdz[1:l_o,1])
+#Aggregate data to levels
+fcast_y<-y[275]+cumsum(fcast$forecast$dy$mean)
+Y<- ts(append(y[1:275],fcast_y), frequency=7)
+library(ggplot2)
+Date <- seq(1:305)
+DATA <- data.frame(Date, Y, y)
+ggplot(DATA, aes(x=Date)) +
+  geom_line(aes(y = Y), color = "red")+    
+  geom_line(aes(y = y)) +
+  scale_y_continuous(name = "")
+######################
 
 
