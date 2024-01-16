@@ -15,14 +15,18 @@ sum(is.na(data))
 
 #Question 1:
 y <- ts(data$`Service satisfaction`, frequency = 4)
-x <- ts(data$`Talk Duration (AVG)`, frequency = 4)
+x <- ts(data$`Waiting Time (AVG)`, frequency = 4)
 tsdisplay(y)
 tsdisplay(x)
-dy <- diff(y)
-tsdisplay(dy)
 adf.test(y)
 adf.test(x)
 
+dy <- diff(y)
+dx <- diff(x)
+tsdisplay(dy)
+tsdisplay(dx)
+adf.test(dy)
+adf.test(dx)
 #Question 2
 mult <- decompose(y, type = "multiplicative")
 add <- decompose(y, type = "additive")
@@ -80,29 +84,117 @@ plot(fcast1)
 fcast1
 
 #Question 6:
-dy <- diff(y)
-dx <- diff(x)
+insamp_y<-ts(y[1:137], frequency=4) #90% of the data
+insamp_x<-ts(x[1:137], frequency = 4)
+outsamp_y <-y[(T+1):length(y)]
+
+dy <- diff(insamp_y)
+dx <- diff(insamp_x)
 tsdisplay(dy)
 tsdisplay(dx)
 adf.test(dy)
 adf.test(dx)
 
 # Combining the two vectors x and y 
-z <- ts(cbind(x,y))
+z <- ts(cbind(insamp_x,insamp_y))
 
 #Phillips-Ouliaris test (2-step Engle-Granger test), null hypothesis: no cointegration
 po.test(z) 
 
 library(Hmisc)
-fit5 <- lm(dy~dx+Lag(trend,-1)
+fit5 <- lm(insamp_y~insamp_x)
 summary(fit5)
 adf.test(resid(fit5))
 bptest(fit5)
 acf(resid(fit5))
 
+fit6 <- lm(insamp_y~insamp_x+log(trend)[1:137])
+summary(fit6)
+acf(resid(fit6))
+adf.test(resid(fit6))
 
+pres1<-auto.arima(insamp_x)
+#pres1<-Arima(pres, order=c(2,1,1), seasonal=c(0,0,2))
+pres2<-forecast(pres1,h=length(outsamp_y))
+presf<-pres2$mean
 
+fcast4<-fit6$coefficients[1]+fit6$coefficients[2]*presf
+accuracy(fcast4, outsamp_y)
 
+#Question 8:
+#group data for further analysis
 
+z <- ts(cbind(x,y), frequency = 4)
+dz<- diff(z)
+
+#determine the order of VAR
+VARselect(dz, lag.max = 8, type="const")[["selection"]] #optimal p =1
+var1 <- VAR(dz, p=4, type="const") #estimate VAR(1)
+summary(var1)
+
+#Can do model diagnostics as in AR models
+#Plot the autocorrelation functions for the VAR residuals
+acf(residuals(var1))
+#Checking for serial correlation in the errors
+serial.test(var1, lags.pt=8, type="PT.asymptotic")
+
+#Checking stability of VAR
+var1.stable <- stability(var1, type = "OLS-CUSUM")
+plot(var1.stable)
+roots(var1)
+
+#Obtaining impulse response functions
+plot(irf(var1,boot = TRUE, ci=0.95))
+
+#split the sample into training and test
+insamp<-ts(y[1:136], frequency=4) #90% of the data
+outsamp <-y[137:length(y)]
+
+insampdz <- ts(dz[1:136, 1:2], frequency = 4)
+outsampdz <- ts(dz[137:181, 1:2], frequency = 4)
+
+#select the order of VAR
+VARselect(insampdz, lag.max = 8, type="const")[["selection"]]
+
+#Fit the model on training data
+fit <- VAR(insampdz, p=4, type="const")
+summary(fit)
+#check the residuals of the model
+serial.test(fit, lags.pt=4, type="PT.asymptotic")
+
+#Obtain the forecast for the test period
+fcast3 <- forecast(fit, h=45)
+plot(fcast3) #provides a plot of the forecasts
+
+#calculate the accuracy of the forecast for the ltn variable
+accuracy(fcast3$forecast$y, outsampdz[1:45, 2])
+op <- fcast3$forecast$y
+
+#Aggregate data to levels
+fcast_y<-y[137]+cumsum(fcast3$forecast$y$mean)
+library(ggplot2)
+Date <- seq(1:length(y))
+ggplot(data, aes(x=Date)) +
+  geom_line(aes(y = append(y[1:137],fcast_y)), color = "red")+    
+  geom_line(aes(y = y)) +
+  scale_y_continuous(name = "")
+
+#Question 9:
+accuracy(fcast3$forecast$y, outsampdz[1:45, 2])
+accuracy(fcast4, outsamp_y)
+accuracy(fcast, outsamp)
+
+z1 <- ts(cbind(x,y), frequency = 4)
+dz1 <- (z)
+fit4 <- VAR(z, p=8, type="const")
+fcast8 <- forecast(fit4, h=4)
+plot(fcast8) #provides a plot of the forecasts
+
+fit4 <- Arima(y, model=fit3)
+summary(fit4) #preserving the estimates obtained in previous step 
+#and using them on the remaining data
+# Obtaining forecast for first four weeks of January 1983
+fcast1<-forecast(fit4,h = 4)
+plot(fcast1)
 
 
