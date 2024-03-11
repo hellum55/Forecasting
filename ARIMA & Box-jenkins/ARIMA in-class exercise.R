@@ -52,7 +52,7 @@ lines(ts(y[77:96], start = 1, frequency = 12))
 #plot data together with the original pseudo out-of-sample
 f1<-ts(fcast1$mean, end=length(y), frequency = 12)
 plot(f1, col ='blue')
-lines(outsamp)
+lines(outsamp)fghcghfhgfhg
 #Testing the accuracy insamp/outsamp
 accuracy(fcast1$mean, outsamp)
 View(data.frame(fcast1$mean,outsamp)) 
