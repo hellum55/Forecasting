@@ -56,6 +56,7 @@ lines(outsamp)fghcghfhgfhg
 #Testing the accuracy insamp/outsamp
 accuracy(fcast1$mean, outsamp)
 View(data.frame(fcast1$mean,outsamp)) 
+fhgchgchgg
 
 #With trend and seasonality is would fit nicely with Holters:
 
